@@ -1,30 +1,28 @@
 #!/usr/bin/env python3
-"""Collatz conjecture explorer."""
+"""Collatz conjecture — sequences, stopping times, records."""
 import sys
-
-def sequence(n):
-    seq = [n]
-    while n != 1:
-        n = n // 2 if n % 2 == 0 else 3 * n + 1
-        seq.append(n)
+def collatz(n):
+    seq=[n]
+    while n!=1:
+        n=n//2 if n%2==0 else 3*n+1; seq.append(n)
     return seq
-
-def stats(start, end):
-    longest, longest_n, highest, highest_n = 0, 0, 0, 0
-    for n in range(start, end + 1):
-        seq = sequence(n)
-        if len(seq) > longest: longest, longest_n = len(seq), n
-        mx = max(seq)
-        if mx > highest: highest, highest_n = mx, n
-    return {'longest_chain': longest, 'longest_n': longest_n, 'highest_value': highest, 'highest_n': highest_n}
-
-if __name__ == '__main__':
-    if len(sys.argv) < 2: print("Usage: collatz.py <number> | collatz.py range <start> <end>"); sys.exit(1)
-    if sys.argv[1] == 'range':
-        s = stats(int(sys.argv[2]), int(sys.argv[3]))
-        for k, v in s.items(): print(f"{k}: {v}")
+def stopping_time(n):
+    steps=0
+    while n!=1: n=n//2 if n%2==0 else 3*n+1; steps+=1
+    return steps
+def records(limit):
+    max_steps=0; max_n=1; records=[]
+    for n in range(2,limit+1):
+        s=stopping_time(n)
+        if s>max_steps: max_steps=s; max_n=n; records.append((n,s))
+    return records
+def cli():
+    n=int(sys.argv[1]) if len(sys.argv)>1 else 27
+    if sys.argv[-1]=="--records":
+        for num,steps in records(n): print(f"  {num:>8}: {steps} steps")
     else:
-        seq = sequence(int(sys.argv[1]))
-        print(f"Length: {len(seq)} | Max: {max(seq)}")
-        if '--full' in sys.argv: print(' → '.join(map(str, seq)))
-        else: print(' → '.join(map(str, seq[:20])) + ('...' if len(seq) > 20 else ''))
+        seq=collatz(n)
+        print(f"  n={n}: {len(seq)-1} steps, max={max(seq)}")
+        if len(seq)<=50: print(f"  {seq}")
+        else: print(f"  {seq[:10]} ... {seq[-5:]}")
+if __name__=="__main__": cli()
