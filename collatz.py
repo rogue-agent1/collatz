@@ -1,20 +1,30 @@
 #!/usr/bin/env python3
-"""Collatz conjecture — explore hailstone sequences."""
+"""Collatz conjecture explorer."""
 import sys
-def collatz(n):
+
+def sequence(n):
     seq = [n]
     while n != 1:
         n = n // 2 if n % 2 == 0 else 3 * n + 1
         seq.append(n)
     return seq
-if __name__ == "__main__":
-    n = int(sys.argv[1]) if len(sys.argv) > 1 else 27
-    seq = collatz(n)
-    print(f"Collatz({n}): {len(seq)} steps, max={max(seq)}")
-    if len(seq) <= 50: print(f"Sequence: {seq}")
-    else: print(f"Start: {seq[:10]}... End: ...{seq[-5:]}")
-    # Find longest sequence in range
-    if "--range" in sys.argv:
-        hi = int(sys.argv[sys.argv.index("--range")+1]) if "--range" in sys.argv else 1000
-        best = max(range(1, hi+1), key=lambda x: len(collatz(x)))
-        print(f"\nLongest in 1..{hi}: {best} ({len(collatz(best))} steps)")
+
+def stats(start, end):
+    longest, longest_n, highest, highest_n = 0, 0, 0, 0
+    for n in range(start, end + 1):
+        seq = sequence(n)
+        if len(seq) > longest: longest, longest_n = len(seq), n
+        mx = max(seq)
+        if mx > highest: highest, highest_n = mx, n
+    return {'longest_chain': longest, 'longest_n': longest_n, 'highest_value': highest, 'highest_n': highest_n}
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2: print("Usage: collatz.py <number> | collatz.py range <start> <end>"); sys.exit(1)
+    if sys.argv[1] == 'range':
+        s = stats(int(sys.argv[2]), int(sys.argv[3]))
+        for k, v in s.items(): print(f"{k}: {v}")
+    else:
+        seq = sequence(int(sys.argv[1]))
+        print(f"Length: {len(seq)} | Max: {max(seq)}")
+        if '--full' in sys.argv: print(' → '.join(map(str, seq)))
+        else: print(' → '.join(map(str, seq[:20])) + ('...' if len(seq) > 20 else ''))
