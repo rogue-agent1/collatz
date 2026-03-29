@@ -1,25 +1,30 @@
 #!/usr/bin/env python3
-"""collatz - Collatz conjecture (3n+1) sequence explorer."""
-import sys
-def sequence(n):
+"""collatz - Collatz sequence explorer."""
+import sys, argparse, json
+
+def collatz_seq(n):
     seq = [n]
     while n != 1:
         n = n // 2 if n % 2 == 0 else 3 * n + 1
         seq.append(n)
     return seq
-def stats(n):
-    seq = sequence(n)
-    return {"start": n, "steps": len(seq)-1, "max": max(seq), "sequence": seq}
-if __name__ == "__main__":
-    if len(sys.argv) < 2: print("Usage: collatz <number> [--range N] [--top N]"); sys.exit(1)
-    if "--range" in sys.argv:
-        end = int(sys.argv[sys.argv.index("--range")+1]) if sys.argv.index("--range")+1 < len(sys.argv) else 100
-        top = int(sys.argv[sys.argv.index("--top")+1]) if "--top" in sys.argv else 10
-        results = [(n, len(sequence(n))-1) for n in range(1, end+1)]
-        results.sort(key=lambda x: -x[1])
-        print(f"Top {top} longest sequences (1-{end}):")
-        for n, steps in results[:top]: print(f"  {n:6d}: {steps} steps")
+
+def main():
+    p = argparse.ArgumentParser(description="Collatz explorer")
+    p.add_argument("n", type=int)
+    p.add_argument("--range", type=int, help="Explore 1..N")
+    p.add_argument("--longest", action="store_true")
+    args = p.parse_args()
+    if args.range:
+        results = []
+        for i in range(1, args.range + 1):
+            seq = collatz_seq(i)
+            results.append({"n": i, "steps": len(seq)-1, "max": max(seq)})
+        if args.longest:
+            results.sort(key=lambda x: x["steps"], reverse=True)
+        print(json.dumps({"range": args.range, "results": results[:20]}, indent=2))
     else:
-        s = stats(int(sys.argv[1]))
-        print(f"Start: {s['start']} | Steps: {s['steps']} | Max: {s['max']}")
-        if len(s['sequence']) <= 50: print(" → ".join(str(x) for x in s['sequence']))
+        seq = collatz_seq(args.n)
+        print(json.dumps({"n": args.n, "steps": len(seq)-1, "max": max(seq), "sequence": seq}, indent=2))
+
+if __name__ == "__main__": main()
